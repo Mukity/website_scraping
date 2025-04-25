@@ -1,0 +1,3 @@
+[submodule "vehicle_scraping"]
+	path = vehicle_scraping
+	url = git@github.com:Mukity/vehicle_scraping.git
