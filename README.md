@@ -14,6 +14,22 @@ Example:
 Available submodules are:
 - vehicle_scraping
 
+### setting up the virtual environment
+1. Create virtual environment using python's venv module 
+
+> python3 -m venv .env
+
+2. Activate the virtual environment
+
+> source .env/bin/activate
+
+3. Install the webtools_library
+
+> pip install webtools_library-0.0.1-py3-none-any.whl
+
+4. Install the requirements from the requirements.txt file
+
+> pip install -r requirements.txt
 
 # Diagrams
 
