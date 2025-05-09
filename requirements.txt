@@ -54,6 +54,5 @@ typing_extensions==4.13.2
 urllib3==2.4.0
 websocket-client==1.8.0
 websockets==15.0.1
-webtools_library @ file:///Users/jacob/projects/webtools_library/dist/webtools_library-0.0.1-py3-none-any.whl#sha256=1f86dfe30a8097cac66b2a06610040afd2b2cc4b34112090d4f246bc5a36e688
 wheel==0.45.1
 wsproto==1.2.0

@@ -6,9 +6,11 @@ from selenium.webdriver.support import expected_conditions as EC
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
 
+from webtools_library.general import get_logger
+
 
 class SeleniumScrape:
-    def __init__(self, headless: bool=True):
+    def __init__(self, headless: bool=True, *, user_id: str="", **kwargs):
         """
         headless: no browserr UI
         """
@@ -18,6 +20,8 @@ class SeleniumScrape:
             swiftshader=True,
             incognito=True
             )
+        
+        self.logger = get_logger(user_id, **kwargs)
     
 
     def open_url(self, url: str):
@@ -71,7 +75,7 @@ class SeleniumScrape:
         """
         selector: html selector e.g. div.vehicle-card in the tag <div class="vehicle-card">vehicle</div>
         """
-        WebDriverWait(self.driver, 5, 0.1).until(
+        WebDriverWait(self.driver, 20).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, selector))
         )
         we =  self.driver.find_elements(By.CSS_SELECTOR, selector)
