@@ -24,14 +24,20 @@ class SeleniumScrape:
         self.logger = get_logger(user_id, **kwargs)
     
 
-    def open_url(self, url: str):
-        self.driver.open(url)
+    def open_url(self, url: str, repeat=0):
+        try:
+            self.driver.open(url)
+        except:
+            repeat+=1
+            self.open_url(url, repeat)
+            assert not repeat>=5, "Unable to open url after 5 attempts"
 
 
     def _get_page_no(self, url: str, page_key: str):
         parsed = urlparse.urlparse(url)
         query_params = parse_qs(parsed.query)
         return int(query_params.get(page_key, [1])[0])
+
 
     def navigate_next_page(self, url: str, page_key: str="page"):
         if page_key not in url:
@@ -47,7 +53,11 @@ class SeleniumScrape:
         self.open_url(url)
         url_ = self.driver.current_url
         return url_, self._get_page_no(url_, page_key)
+    
 
+    def click_by_script(self, selector: str):
+        self.driver.execute_script(f'document.querySelector("{selector}").click();')
+    
 
     def generate_page_urls(self, url: str, page_key: str="page"):
         all_urls = [url]
@@ -71,27 +81,33 @@ class SeleniumScrape:
         return source
     
 
-    def get_webelement_data(self, selector: str, *, return_webelement: bool=True):
+    def get_webelement_objs(self, selector: str):
         """
         selector: html selector e.g. div.vehicle-card in the tag <div class="vehicle-card">vehicle</div>
         """
-        WebDriverWait(self.driver, 20).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, selector))
-        )
-        we =  self.driver.find_elements(By.CSS_SELECTOR, selector)
-        if return_webelement:
-            return we
+        try:
+            WebDriverWait(self.driver, 20).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, selector))
+            )
+        except Exception as e:
+            e = e.strip() or f"selector element {selector} not present"
+            self.logger.error(e)
+            return []
+        return self.driver.find_elements(By.CSS_SELECTOR, selector)
         
+
+    def get_webelement_text(self, selector: str):
+        we = self.get_webelement_objs(selector)
         w = []
         for el in we:
             t = el.text
             if t.strip():
                 w.append(t)
         return w
-
+    
 
     def get_webelement_table_data(self, selector: str):
-        sects = self.get_webelement_data(selector)
+        sects = self.get_webelement_objs(selector)
         results = []
         for sect in sects:
             dts = sect.find_elements(By.TAG_NAME, 'dt')
@@ -108,6 +124,7 @@ class SeleniumScrape:
                 result[dt.text.strip()] = text
             results.append(result)
         return results
+
 
     def quit_driver(self):
         self.driver.quit()

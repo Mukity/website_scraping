@@ -34,4 +34,4 @@ args.update(args.pop("kwargs"))
 st = time.time()
 locals()[mode](sub_mode=sub_mode, **args)()
 print("Total Time: ", time.time()-st)
-# Example: python scrape.py vehicle cars --url "https://www.cars.com/shopping/results/?stock_type=new&page=500&page_size=20" --kwargs '{"headless":false}'
+# Example: python scrape.py vehicle cars --url "https://www.cars.com/shopping/results/?stock_type=new&page=500&page_size=20&zip=&maximum_distance=500" --kwargs '{"headless":false}'
