@@ -15,11 +15,12 @@ parser = argparse.ArgumentParser(
     description='Scraping data off websites'
 )
 parser.add_argument("mode", default="vehicle", choices=["vehicle"])
+parser.add_argument("region")
 parser.add_argument("sub_mode")
-parser.add_argument("--url", required=True)
 parser.add_argument("--threads", default=1, type=int)
 parser.add_argument("--output_format", default="json", choices=["json", "csv"])
 parser.add_argument('--kwargs', default={}, type=json.loads)
+
 
 args = parser.parse_args()
 if args.threads>cpus:
@@ -27,11 +28,12 @@ if args.threads>cpus:
 
 args = vars(args)
 mode = args.pop("mode").capitalize()
+region = args.pop("region")
 sub_mode = args.pop("sub_mode")
 args.update(args.pop("kwargs"))
 
 # calling mode as a class
 st = time.time()
-locals()[mode](sub_mode=sub_mode, **args)()
+locals()[mode](region=region, sub_mode=sub_mode, **args)()
 print("Total Time: ", time.time()-st)
-# Example: python scrape.py vehicle cars --url "https://www.cars.com/shopping/results/?stock_type=new&page=500&page_size=20&zip=&maximum_distance=500" --kwargs '{"headless":false}'
+# Example: python scrape.py vehicle usa cars --kwargs '{"headless":false}'
