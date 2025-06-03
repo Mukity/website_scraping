@@ -1,9 +1,5 @@
-import json
-import Levenshtein
 import selenium.common
 
-from typing import Callable, Iterable
-from hashlib import md5
 from seleniumbase import Driver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,91 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
-from redis import Redis
 
-from webtools_library.general import get_logger
-
-import spacy
-nlp = spacy.load("en_core_web_sm")
-
-
-def make_hash(val: str):
-    return md5(val.encode()).hexdigest()
-
-
-def similarity_score(w1: str, w2: str):
-    token1 = nlp.vocab[w1]
-    token2 = nlp.vocab[w2]
-    if not token1.has_vector or not token2.has_vector:
-        semantic = 0
-    else:
-        semantic = token1.similarity(token2)  # 0 to 1
-
-    spelling = 1 - Levenshtein.distance(w1, w2) / max(len(w1), len(w2))
-
-    return 0.6 * semantic + 0.4 * spelling
-
-
-def closest_word(word: str, options: Iterable):
-    return max(options, key=lambda w: similarity_score(word, w))
-
-
-class Cacher:
-    def __init__(self, host: str='localhost', port: str=6379, **kwargs):
-        self._redis = Redis(host=host, port=port, decode_responses=True)
-    
-
-    def set(self, key: str, value: any):
-        self._redis.set(key, json.dumps(value or {}))
-
-
-    def get(self, key: str):
-        x = self._redis.get(key)
-        if x:
-            return json.loads(x)
-
-
-    def hset(self, name: str, key: str, value: any):
-        self._redis.hset(name, key, json.dumps(value or {}))
-
-
-    def hget(self, name: str, key: str):
-        x = self._redis.hget(name, key)
-        if x:
-            return json.loads(x)
-
-    
-    def exists(self, key: str):
-        return self._redis.exists(key)
-
-
-    def hexists(self, name: str, key: str):
-        return self._redis.hexists(name, key)
-
-
-    def hset_exec(self, *, name: str, key: str, func: Callable, desc: str, logger, _cached: bool=True, **kwargs):
-        vals = self.hget(name, key)
-        if _cached and self.hexists(name, key):
-            logger.info(f"got {desc} from cache")
-        else:
-            vals = func(**kwargs)
-            if isinstance(vals, set):
-                vals = list(vals)
-            self.hset(name, key, vals)
-        return vals
-
-
-    def set_exec(self, *, key: str, func: Callable, desc: str, logger, _cached: bool=True,  **kwargs):
-        vals = self.get(key)
-        if _cached and self.exists(key):
-            logger.info(f"got {desc} from cache")
-        else:
-            vals = func(**kwargs)
-            if isinstance(vals, set):
-                vals = list(vals)
-            self.set(key, vals)
-        return vals
-
+from webtools_library.cacher import Cacher
+from webtools_library.general import get_logger, make_hash, closest_word
 
 
 class SeleniumScrape:
@@ -112,6 +26,7 @@ class SeleniumScrape:
         
         self.logger = get_logger(user_id, **kwargs)
         self.cacher = Cacher(**kwargs)
+        self._kwargs = kwargs
     
 
     def open_url(self, url: str, repeat: int=0):
