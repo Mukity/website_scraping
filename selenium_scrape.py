@@ -5,9 +5,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-import urllib.parse as urlparse
-from urllib.parse import parse_qs
-
 from webtools_library.cacher import Cacher
 from webtools_library.general import get_logger, make_hash, closest_word
 
@@ -17,11 +14,16 @@ class SeleniumScrape:
         """
         headless: no browserr UI
         """
+        from selenium.webdriver.chrome.options import Options
+
+        options = Options()
+        options.add_argument("--start-minimized")  
         self.driver = Driver(
             headless1=headless,
             uc=False,
             swiftshader=True,
-            incognito=True
+            incognito=True,
+            undetectable=kwargs.get("undetectable", False)
             )
         
         self.logger = get_logger(user_id, **kwargs)
@@ -39,55 +41,20 @@ class SeleniumScrape:
             assert not repeat>=5, "Unable to open url after 5 attempts"
 
 
-    def _get_page_no(self, url: str, page_key: str):
-        parsed = urlparse.urlparse(url)
-        query_params = parse_qs(parsed.query)
-        return int(query_params.get(page_key, [1])[0])
-
-
-    def navigate_next_page(self, url: str, page_key: str="page"):
-        if page_key not in url:
-            return
-        
-        parsed = urlparse.urlparse(url)
-        query_params = parse_qs(parsed.query)
-        curr_page = int(query_params.get(page_key, [1])[0])
-        nxt_page = curr_page+1
-        query_params[page_key] = [str(nxt_page)]
-        new_query = urlparse.urlencode(query_params, doseq=True)
-        url =  f"{parsed.scheme}://{parsed.netloc}{parsed.path}?{new_query}"
-        self.open_url(url)
-        url_ = self.driver.current_url
-        return url_, self._get_page_no(url_, page_key)
-    
-
     def click_by_script(self, selector: str):
         self.driver.execute_script(f'document.querySelector("{selector}").click();')
     
 
-    def generate_page_urls(self, url: str, page_key: str="page"):
-        all_urls = [url]
-        url_, page_no = self.navigate_next_page(url, page_key)
-        all_urls.append(url_)
-
-        while True:
-            url_, pg_no = self.navigate_next_page(url_, page_key)
-            if pg_no==page_no:
-                break
-
-            page_no=pg_no
-            all_urls.append(url_)
-        return list(set(all_urls))
-    
-
-    def get_webelement_objs(self, selector: str, driver=None):
+    def get_webelement_objs(self, selector: str, driver=None, by: str=None):
         """
         selector: html selector e.g. div.vehicle-card in the tag <div class="vehicle-card">vehicle</div>
         """
         driver = driver or self.driver
+        if not by:
+            by = "css selector"
         try:
             WebDriverWait(driver, 1).until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, selector))
+                EC.presence_of_all_elements_located((by, selector))
             )
         except selenium.common.exceptions.TimeoutException as e:
             return []
@@ -95,15 +62,17 @@ class SeleniumScrape:
             e = f"selenium {type(e).__name__}: {str(e)}"
             self.logger.warning(e)
             return []
-        return driver.find_elements(By.CSS_SELECTOR, selector)
+        return driver.find_elements(by, selector)
         
 
-    def get_webelement_text(self, selector: str, driver=None):
-        we = self.get_webelement_objs(selector, driver)
+    def get_webelement_text(self, selector: str, driver=None, by: str=None):
+        we = self.get_webelement_objs(selector, driver, by)
         w = []
         for el in we:
-            t = el.text
-            if t.strip():
+            t = el.text.strip()
+            if not t:
+                t = el.get_attribute("textContent")
+            if t:
                 w.append(t)
         return w
     
