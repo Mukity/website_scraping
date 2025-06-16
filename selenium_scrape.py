@@ -17,15 +17,19 @@ class SeleniumScrape:
         from selenium.webdriver.chrome.options import Options
 
         options = Options()
-        options.add_argument("--start-minimized")  
-        self.driver = Driver(
-            headless1=headless,
-            uc=False,
-            swiftshader=True,
-            incognito=True,
-            undetectable=kwargs.get("undetectable", False)
-            )
-        
+        options.add_argument("--start-minimized")
+        if kwargs.pop("init_driver", True):
+            print("jake")
+            self.driver = Driver(
+                headless1=headless,
+                uc=False,
+                swiftshader=True,
+                incognito=True,
+                undetectable=kwargs.get("undetectable", False)
+                )
+        else:
+            self.driver = None
+
         self.logger = get_logger(user_id, **kwargs)
         self.cacher = Cacher(**kwargs)
         self._kwargs = kwargs
