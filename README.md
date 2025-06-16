@@ -39,16 +39,18 @@ Available submodules are:
 # Usage
 - Entry point of the application is the scrape.py file.
 - Interacting with the application is via command-line
-The format for interaction is as follows
+Example:
 ```
-python scrape.py <mode> <region> <sub_mode> <optional parameters>
+python scrape.py <mode> <region> --sub_mode <sub_mode> <optional parameters>
 ```
 ## Description of parameters
 ### Required
 Modes available
 1. vehicle
+2. upload_dave
 
-Regions available include:
+#### Vehicle
+Regions available for vehicle include:
 1. usa
 2. mena
 
@@ -92,7 +94,7 @@ Important Notes
 ### Optional
 The optional parameters are passed as part of the kwargs parameter
 Example:
-> python scrape.py vehicle mena yalla --kwargs '{"_cached": true}'
+> python scrape.py vehicle mena --sub_mode yalla --kwargs '{"_cached": true}'
 
 NOTE: The parameters passed in the kwargs argument should be a string that is json loadable.
 
@@ -119,4 +121,12 @@ NOTE: The parameters passed in the kwargs argument should be a string that is js
 ```
 Example 
 ```
-> python scrape.py vehicle mena yalla --kwargs '{"_cached": false, "upload": true, "max_pages": 3}'
+> python scrape.py vehicle mena --sub_mode yalla --kwargs '{"_cached": false, "upload": true, "max_pages": 3}'
+
+#### upload_dave
+- This mode consolidates vehicle data based on region specified and uploads to the DaveAI backend.
+Has several regions:
+- all the places in benz and yalla
+- usa
+- all
+> python scrape.py upload_dave all
