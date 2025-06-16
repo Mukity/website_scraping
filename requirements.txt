@@ -107,7 +107,6 @@ wcwidth==0.2.13
 weasel==0.4.1
 websocket-client==1.8.0
 websockets==15.0.1
-webtools_library @ file:///Users/jacob/projects/webtools_library/dist/webtools_library-0.0.1-py3-none-any.whl#sha256=09a1fe486bfd237f5d416506bad2528b02627f8f46c78f4d5661eb7d6bcc0b13
 wheel==0.45.1
 wrapt==1.17.2
 wsproto==1.2.0
